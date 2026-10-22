@@ -1,3 +1,5 @@
+// REFERENCE ONLY: ShopLite's cart.js with all three demo bugs fixed. Used by
+// scripts/eval_reproduce.py to check that generated tests pass once the bug is gone.
 // Cart domain logic for ShopLite. Pure functions over a plain cart object, so
 // the same module runs in the browser and in Node's test runner.
 // All money values are integer cents to avoid floating point drift.
@@ -43,12 +45,15 @@ export function addItem(cart, productId, quantity = 1) {
 export function setQuantity(cart, productId, quantity) {
   const line = cart.items.find((item) => item.id === productId);
   if (!line) return cart;
+  quantity = Math.max(1, quantity);
   cart.subtotal += line.price * (quantity - line.quantity);
   line.quantity = quantity;
   return cart;
 }
 
 export function removeItem(cart, productId) {
+  const line = cart.items.find((item) => item.id === productId);
+  if (line) cart.subtotal -= line.price * line.quantity;
   cart.items = cart.items.filter((item) => item.id !== productId);
   return cart;
 }
@@ -57,6 +62,9 @@ export function applyCoupon(cart, rawCode) {
   const code = String(rawCode || "").trim().toUpperCase();
   if (!COUPONS[code]) {
     return { ok: false, message: `"${rawCode}" is not a valid coupon code.` };
+  }
+  if (cart.coupons.includes(code)) {
+    return { ok: false, message: `Coupon ${code} is already applied.` };
   }
   cart.coupons.push(code);
   return { ok: true, message: `Coupon ${code} applied: ${COUPONS[code].label}.` };
