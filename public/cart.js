@@ -58,6 +58,9 @@ export function applyCoupon(cart, rawCode) {
   if (!COUPONS[code]) {
     return { ok: false, message: `"${rawCode}" is not a valid coupon code.` };
   }
+  if (cart.coupons.includes(code)) {
+    return { ok: true, message: `Coupon ${code} is already applied.` };
+  }
   cart.coupons.push(code);
   return { ok: true, message: `Coupon ${code} applied: ${COUPONS[code].label}.` };
 }
